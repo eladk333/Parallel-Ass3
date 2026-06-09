@@ -1,0 +1,12 @@
+# Ignore build binaries
+gauss_bench
+kmeans_bench
+
+# Ignore logs and output data
+*.log
+Part1_Gaussian/images/output/*
+Part2_KMeans/inputs/*.csv
+
+# Ignore common system/editor junk
+.DS_Store
+*.o
