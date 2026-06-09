@@ -1,3 +1,5 @@
+/* 322587064 Elad Katz */
+
 /*
  *  kmeans.c
  *  Serial reference implementation of K-means on 2D points. Your job
@@ -61,13 +63,18 @@ int runKMeans(PointSet *data, Centroids *centroids, int maxIters, double toleran
     int *counts = (int *)malloc((size_t)k * sizeof(int));
 
     double tolSquared = tolerance * tolerance;
-    int iter = 0;
-
-    for (iter = 0; iter < maxIters; iter++) {
+    //int iter = 0;
+    int global_iter = 0;
+    int converged = 0;
+    #pragma omp parallel  // Create the threads once
+    {
+    for (int iter = 0; iter < maxIters; iter++) {
         /* Assignment step: nearest centroid for every point. */
+        #pragma omp for schedule(static)
         for (int i = 0; i < n; i++) {
             double bestDist = squaredDistance(data->points[i], centroids->centroids[0]);
             int bestCluster = 0;
+            //#pragma omp single // Only one threads does this to avoid since the loop is small enough
             for (int c = 1; c < k; c++) {
                 double d = squaredDistance(data->points[i], centroids->centroids[c]);
                 if (d < bestDist) {
@@ -75,17 +82,23 @@ int runKMeans(PointSet *data, Centroids *centroids, int maxIters, double toleran
                     bestCluster = c;
                 }
             }
+            // implicit barrier here
             data->assignments[i] = bestCluster;
         }
 
         /* Reset per-cluster accumulators. */
+        #pragma omp single
         for (int c = 0; c < k; c++) {
             sumX[c] = 0.0;
             sumY[c] = 0.0;
             counts[c] = 0;
         }
+        // implicit barrier here
 
         /* Accumulate into each cluster. */
+        // Every thread get's it own copy of the 3 variables, then after all the threads are done we reducde them
+        #pragma omp for schedule(static) \
+    reduction(+: sumX[:k], sumY[:k], counts[:k])
         for (int i = 0; i < n; i++) {
             int c = data->assignments[i];
             sumX[c] += data->points[i].x;
@@ -94,6 +107,8 @@ int runKMeans(PointSet *data, Centroids *centroids, int maxIters, double toleran
         }
 
         /* Recompute centroids; track largest movement for convergence. */
+        #pragma omp single 
+        {
         double maxMovement = 0.0;
         for (int c = 0; c < k; c++) {
             if (counts[c] == 0) continue;
@@ -106,13 +121,17 @@ int runKMeans(PointSet *data, Centroids *centroids, int maxIters, double toleran
         }
 
         if (maxMovement < tolSquared) {
-            iter++;
-            break;
+            //iter++;
+            converged = 1;
         }
+        global_iter = iter + 1;
     }
+    if (converged) break;
+    }
+}
 
     free(sumX);
     free(sumY);
     free(counts);
-    return iter;
+    return global_iter;
 }

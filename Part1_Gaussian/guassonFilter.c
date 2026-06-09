@@ -1,3 +1,5 @@
+/* 322587064 Elad Katz */
+
 //
 //  guassonFilter.c
 //  guasonFilter
@@ -100,26 +102,22 @@ Image *createBlurredImage(int radius, Image *image) {
     double *kernel;
     double sum;
 
-    // The kernel is built sequentially once and is shared (read-only) across all threads.
     createGaussianKernel(radius, sigma, &kernel, &sum);
-
-    // Distribute the 2D loop iterations across threads.
-    // Static scheduling is used due to the uniform workload per pixel.
     #pragma omp parallel for collapse(2) schedule(static)
-    for (int y = radius; y < height - radius; y++) {
-        for (int x = radius; x < width - radius; x++) {
-            
-            // These variables are private to each thread
+    for (int y = radius; y < height - radius; y++) { // Swtiched because of cache miss
+        for (int x = radius; x < width - radius; x++) {        
             double redValue = 0.0;
             double greenValue = 0.0;
             double blueValue = 0.0;
 
-            for (int kernelX = -radius; kernelX <= radius; kernelX++) {
-                for (int kernelY = -radius; kernelY <= radius; kernelY++) {
+            // Swtiched because of cache miss
+            for (int kernelY = -radius; kernelY <= radius; kernelY++) {
+                #pragma omp simd reduction(+:redValue, greenValue, blueValue)
+                for (int kernelX = -radius; kernelX <= radius; kernelX++) {
+                
                     int imageX = x - kernelX;
                     int imageY = y - kernelY;
-                    
-                    double kernelValue = kernel[(kernelX + radius) * kernelWidth + (kernelY + radius)];
+                    double kernelValue = kernel[(kernelY + radius) * kernelWidth + (kernelX + radius)];
                     RGBA pixel = image->pixels[imageY * width + imageX];
 
                     redValue += pixel.r * kernelValue;
@@ -128,13 +126,11 @@ Image *createBlurredImage(int radius, Image *image) {
                 }
             }
 
-            // Write to the output image. No atomics/locks needed since 
-            // each thread writes to a strictly unique pixel location.
             RGBA *outputPixel = &outputImage->pixels[y * width + x];
             outputPixel->r = (unsigned char)redValue;
             outputPixel->g = (unsigned char)greenValue;
             outputPixel->b = (unsigned char)blueValue;
-            outputPixel->a = image->pixels[y * width + x].a; // Preserve alpha
+            outputPixel->a = image->pixels[y * width + x].a; // Preserve the alpha channel
         }
     }
 

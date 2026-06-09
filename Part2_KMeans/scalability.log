@@ -1,0 +1,58 @@
+K-means scalability + correctness report
+maxIters=100, tolerance=1e-08, centroid-match tolerance=1
+Max OMP threads available: 32
+Inputs scanned: 6 in inputs/
+
+=== blobs_small_k4.csv (n=5000, k=4, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 0.0026     | 89     | 1.000    | 1.000      | reference
+2        | 0.0015     | 89     | 1.720    | 0.860      | OK (matches T=1)
+4        | 0.0010     | 89     | 2.539    | 0.635      | OK (matches T=1)
+8        | 0.0012     | 89     | 2.082    | 0.260      | OK (matches T=1)
+16       | 0.0032     | 89     | 0.820    | 0.051      | OK (matches T=1)
+
+=== blobs_medium_k8.csv (n=50000, k=8, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 0.0520     | 100    | 1.000    | 1.000      | reference
+2        | 0.0273     | 100    | 1.906    | 0.953      | OK (matches T=1)
+4        | 0.0144     | 100    | 3.624    | 0.906      | OK (matches T=1)
+8        | 0.0084     | 100    | 6.202    | 0.775      | OK (matches T=1)
+16       | 0.0061     | 100    | 8.574    | 0.536      | OK (matches T=1)
+
+=== blobs_large_k16.csv (n=200000, k=16, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 0.4096     | 100    | 1.000    | 1.000      | reference
+2        | 0.2054     | 100    | 1.994    | 0.997      | OK (matches T=1)
+4        | 0.1037     | 100    | 3.948    | 0.987      | OK (matches T=1)
+8        | 0.0537     | 100    | 7.631    | 0.954      | OK (matches T=1)
+16       | 0.0327     | 100    | 12.522   | 0.783      | OK (matches T=1)
+
+=== blobs_heavy_k32.csv (n=1000000, k=32, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 3.9631     | 100    | 1.000    | 1.000      | reference
+2        | 2.0713     | 100    | 1.913    | 0.957      | OK (matches T=1)
+4        | 1.0464     | 100    | 3.787    | 0.947      | OK (matches T=1)
+8        | 0.5329     | 100    | 7.437    | 0.930      | OK (matches T=1)
+16       | 0.3062     | 100    | 12.943   | 0.809      | OK (matches T=1)
+
+=== blobs_heavy_heavy_k48.csv (n=2500000, k=48, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 16.1437    | 100    | 1.000    | 1.000      | reference
+2        | 8.0538     | 100    | 2.004    | 1.002      | OK (matches T=1)
+4        | 4.0313     | 100    | 4.005    | 1.001      | OK (matches T=1)
+8        | 2.0315     | 100    | 7.947    | 0.993      | OK (matches T=1)
+16       | 1.0682     | 100    | 15.113   | 0.945      | OK (matches T=1)
+
+=== blobs_heavy_heavy_heavy_k64.csv (n=5000000, k=64, maxIters=100) ===
+Threads  | Time(s)    | Iters  | Speedup  | Efficiency | Correctness
+---------+------------+--------+----------+------------+----------------------
+1        | 46.6614    | 100    | 1.000    | 1.000      | reference
+2        | 23.3866    | 100    | 1.995    | 0.998      | OK (matches T=1)
+4        | 11.7090    | 100    | 3.985    | 0.996      | OK (matches T=1)
+8        | 5.8649     | 100    | 7.956    | 0.995      | OK (matches T=1)
+16       | 2.9567     | 100    | 15.782   | 0.986      | OK (matches T=1)
